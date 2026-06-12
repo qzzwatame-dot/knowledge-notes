@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Knowledge Notes</title>
+  <meta name="description" content="質問から作る個人用の日本語知識ノート。">
+  <link rel="stylesheet" href="styles/site.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="shell header-layout">
+      <div>
+        <p class="eyebrow">Personal Knowledge Notes</p>
+        <h1>Knowledge Notes</h1>
+        <p class="lead">ChatGPTアプリから送った疑問を、図解つきの記事として蓄積する個人用ノートです。</p>
+      </div>
+      <button class="theme-toggle" type="button" id="themeToggle" aria-pressed="false">
+        <span aria-hidden="true">◐</span>
+        <span>表示</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="controls" aria-labelledby="filter-title">
+      <div>
+        <h2 id="filter-title">記事を探す</h2>
+        <p>キーワードとカテゴリで、あとから読み返したい調査ノートを絞り込めます。</p>
+      </div>
+
+      <div class="filter-grid">
+        <label class="field">
+          <span>キーワード検索</span>
+          <input id="searchInput" type="search" placeholder="例：金利、AI、面接" autocomplete="off">
+        </label>
+
+        <label class="field">
+          <span>カテゴリ</span>
+          <select id="categorySelect">
+            <option value="all">すべて</option>
+            <option value="technology">Technology</option>
+            <option value="finance">Finance</option>
+            <option value="economics">Economics</option>
+            <option value="job-hunting">Job Hunting</option>
+            <option value="ai-projects">AI Projects</option>
+            <option value="life">Life</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="article-section" aria-labelledby="article-title">
+      <div class="section-heading">
+        <h2 id="article-title">記事一覧</h2>
+        <p id="resultCount" aria-live="polite">0件</p>
+      </div>
+      <div class="article-list" id="articleList"></div>
+      <p class="empty-state" id="emptyState">まだ記事がありません。「質問：」で始まる疑問をCodexに送ると、調査記事がここに追加されます。</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell">
+      <p>個人用の知識ノートです。秘密情報、個人情報、APIキーは保存しないでください。</p>
+    </div>
+  </footer>
+
+  <script>
+    const articles = [
+      // 新しい記事を追加するときは、この配列の先頭に追加する。
+      // {
+      //   title: "記事タイトル",
+      //   summary: "30秒で内容を思い出せる短い概要。",
+      //   category: "technology",
+      //   categoryLabel: "Technology",
+      //   date: "2026-06-12",
+      //   url: "technology/example.html",
+      //   keywords: ["例", "キーワード"]
+      // }
+    ];
+
+    const list = document.querySelector("#articleList");
+    const emptyState = document.querySelector("#emptyState");
+    const resultCount = document.querySelector("#resultCount");
+    const searchInput = document.querySelector("#searchInput");
+    const categorySelect = document.querySelector("#categorySelect");
+    const themeToggle = document.querySelector("#themeToggle");
+
+    const savedTheme = localStorage.getItem("knowledge-notes-theme");
+    if (savedTheme === "dark" || savedTheme === "light") {
+      document.documentElement.dataset.theme = savedTheme;
+      themeToggle.setAttribute("aria-pressed", String(savedTheme === "dark"));
+    }
+
+    function normalizeText(value) {
+      return value.toLowerCase().replace(/\s+/g, " ").trim();
+    }
+
+    function articleMatches(article, query, category) {
+      const text = normalizeText([
+        article.title,
+        article.summary,
+        article.categoryLabel,
+        article.date,
+        ...(article.keywords || [])
+      ].join(" "));
+
+      const matchesQuery = query === "" || text.includes(query);
+      const matchesCategory = category === "all" || article.category === category;
+      return matchesQuery && matchesCategory;
+    }
+
+    function renderArticles() {
+      const query = normalizeText(searchInput.value);
+      const category = categorySelect.value;
+      const filtered = articles.filter((article) => articleMatches(article, query, category));
+
+      list.innerHTML = filtered.map((article) => `
+        <article class="article-card">
+          <div class="article-meta">
+            <span>${article.categoryLabel}</span>
+            <time datetime="${article.date}">${article.date}</time>
+          </div>
+          <h3><a href="${article.url}">${article.title}</a></h3>
+          <p>${article.summary}</p>
+        </article>
+      `).join("");
+
+      resultCount.textContent = `${filtered.length}件`;
+      emptyState.hidden = filtered.length !== 0;
+    }
+
+    searchInput.addEventListener("input", renderArticles);
+    categorySelect.addEventListener("change", renderArticles);
+    themeToggle.addEventListener("click", () => {
+      const current = document.documentElement.dataset.theme;
+      const next = current === "dark" ? "light" : "dark";
+      document.documentElement.dataset.theme = next;
+      localStorage.setItem("knowledge-notes-theme", next);
+      themeToggle.setAttribute("aria-pressed", String(next === "dark"));
+    });
+
+    renderArticles();
+  </script>
+</body>
+</html>

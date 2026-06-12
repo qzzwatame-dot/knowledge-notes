@@ -1,0 +1,11 @@
+.DS_Store
+.codex/
+.env
+.env.*
+node_modules/
+*.log
+secrets.*
+*.pem
+*.key
+*.p12
+*.mobileprovision
